@@ -1,0 +1,133 @@
+from geometry_lib import (
+    Circle, Triangle, Rectangle,
+    calculate_area, create_circle, create_triangle, create_rectangle
+)
+
+
+def main():
+    """Демонстрация возможностей библиотеки."""
+    
+    print("=== Демонстрация библиотеки геометрических фигур ===\n")
+    
+    # 1. Создание фигур и вычисление площадей
+    print("1. Создание фигур и вычисление площадей:")
+    
+    # Круг
+    circle = create_circle(5.0)
+    print(f"Круг с радиусом {circle.radius}: площадь = {circle.area():.2f}")
+    
+    # Треугольник
+    triangle = create_triangle(3.0, 4.0, 5.0)
+    print(f"Треугольник со сторонами {triangle.a}, {triangle.b}, {triangle.c}: "
+          f"площадь = {triangle.area():.2f}")
+    
+    # Прямоугольник
+    rectangle = create_rectangle(4.0, 6.0)
+    print(f"Прямоугольник {rectangle.width}x{rectangle.height}: "
+          f"площадь = {rectangle.area():.2f}")
+    
+    print()
+    
+    # 2. Полиморфное вычисление площадей
+    print("2. Полиморфное вычисление площадей (без знания типа в compile-time):")
+    
+    shapes = [
+        create_circle(3.0),
+        create_triangle(6.0, 8.0, 10.0),
+        create_rectangle(5.0, 7.0),
+        create_circle(2.5),
+        create_triangle(5.0, 5.0, 5.0)  # равносторонний
+    ]
+    
+    total_area = 0
+    for i, shape in enumerate(shapes, 1):
+        area = calculate_area(shape)
+        shape_type = type(shape).__name__
+        total_area += area
+        print(f"Фигура {i} ({shape_type}): площадь = {area:.2f}")
+    
+    print(f"Общая площадь всех фигур: {total_area:.2f}")
+    print()
+    
+    # 3. Проверка треугольников на прямоугольность
+    print("3. Проверка треугольников на прямоугольность:")
+    
+    test_triangles = [
+        (3, 4, 5),      # классический прямоугольный
+        (5, 12, 13),    # еще один прямоугольный
+        (8, 15, 17),    # прямоугольный
+        (2, 3, 4),      # не прямоугольный
+        (1, 1, 1),      # равносторонний
+        (3, 3, 3),      # равносторонний
+    ]
+    
+    for a, b, c in test_triangles:
+        triangle = create_triangle(a, b, c)
+        is_right = triangle.is_right_triangle()
+        print(f"Треугольник ({a}, {b}, {c}): "
+              f"{'прямоугольный' if is_right else 'не прямоугольный'}")
+    
+    print()
+    
+    # 4. Демонстрация обработки ошибок
+    print("4. Демонстрация обработки ошибок:")
+    
+    try:
+        invalid_circle = Circle(-5)
+    except ValueError as e:
+        print(f"Ошибка при создании круга: {e}")
+    
+    try:
+        invalid_triangle = Triangle(1, 2, 5)  # нарушение неравенства треугольника
+    except ValueError as e:
+        print(f"Ошибка при создании треугольника: {e}")
+    
+    try:
+        invalid_rectangle = Rectangle(0, 5)
+    except ValueError as e:
+        print(f"Ошибка при создании прямоугольника: {e}")
+    
+    print()
+    
+    # 5. Работа с очень маленькими и большими числами
+    print("5. Работа с экстремальными значениями:")
+    
+    tiny_circle = create_circle(1e-6)
+    huge_circle = create_circle(1e6)
+    
+    print(f"Очень маленький круг (r=1e-6): площадь = {tiny_circle.area():.2e}")
+    print(f"Очень большой круг (r=1e6): площадь = {huge_circle.area():.2e}")
+    
+    print()
+    
+    # 6. Демонстрация легкости расширения
+    print("6. Легкость добавления новых фигур:")
+    print("Библиотека легко расширяется - просто наследуйтесь от GeometricShape")
+    print("и реализуйте методы area() и validate(). Пример с Rectangle уже включен.")
+    
+    # Пример расширения: добавим эллипс
+    import math
+    from geometry_lib import GeometricShape
+    
+    class Ellipse(GeometricShape):
+        """Эллипс с полуосями a и b."""
+        
+        def __init__(self, a: float, b: float):
+            if a <= 0 or b <= 0:
+                raise ValueError("Полуоси должны быть положительными")
+            self.a = a
+            self.b = b
+        
+        def area(self) -> float:
+            return math.pi * self.a * self.b
+        
+        def validate(self) -> bool:
+            return self.a > 0 and self.b > 0
+    
+    ellipse = Ellipse(3.0, 2.0)
+    print(f"Эллипс с полуосями {ellipse.a} и {ellipse.b}: "
+          f"площадь = {calculate_area(ellipse):.2f}")
+
+
+if __name__ == "__main__":
+    main()

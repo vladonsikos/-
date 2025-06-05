@@ -1,0 +1,180 @@
+import math
+from abc import ABC, abstractmethod
+from typing import Union
+
+
+class GeometricShape(ABC):
+    """Абстрактный базовый класс для всех геометрических фигур."""
+    
+    @abstractmethod
+    def area(self) -> float:
+        """Вычисляет площадь фигуры."""
+        pass
+    
+    @abstractmethod
+    def validate(self) -> bool:
+        """Проверяет корректность параметров фигуры."""
+        pass
+
+
+class Circle(GeometricShape):
+    """Класс для работы с кругом."""
+    
+    def __init__(self, radius: float):
+        """
+        Инициализация круга.
+        
+        Args:
+            radius: Радиус круга
+            
+        Raises:
+            ValueError: Если радиус отрицательный или равен нулю
+        """
+        if radius <= 0:
+            raise ValueError("Радиус должен быть положительным числом")
+        self.radius = radius
+    
+    def area(self) -> float:
+        """Вычисляет площадь круга."""
+        return math.pi * self.radius ** 2
+    
+    def validate(self) -> bool:
+        """Проверяет корректность радиуса."""
+        return self.radius > 0
+
+
+class Triangle(GeometricShape):
+    """Класс для работы с треугольником."""
+    
+    def __init__(self, a: float, b: float, c: float):
+        """
+        Инициализация треугольника.
+        
+        Args:
+            a, b, c: Стороны треугольника
+            
+        Raises:
+            ValueError: Если стороны не образуют валидный треугольник
+        """
+        if not all(side > 0 for side in [a, b, c]):
+            raise ValueError("Все стороны должны быть положительными числами")
+        
+        if not self._is_valid_triangle(a, b, c):
+            raise ValueError("Заданные стороны не образуют треугольник")
+        
+        self.a = a
+        self.b = b
+        self.c = c
+    
+    def _is_valid_triangle(self, a: float, b: float, c: float) -> bool:
+        """Проверяет неравенство треугольника."""
+        return (a + b > c) and (a + c > b) and (b + c > a)
+    
+    def area(self) -> float:
+        """Вычисляет площадь треугольника по формуле Герона."""
+        s = (self.a + self.b + self.c) / 2  # полупериметр
+        return math.sqrt(s * (s - self.a) * (s - self.b) * (s - self.c))
+    
+    def validate(self) -> bool:
+        """Проверяет корректность сторон треугольника."""
+        return (all(side > 0 for side in [self.a, self.b, self.c]) and 
+                self._is_valid_triangle(self.a, self.b, self.c))
+    
+    def is_right_triangle(self, tolerance: float = 1e-9) -> bool:
+        """
+        Проверяет, является ли треугольник прямоугольным.
+        
+        Args:
+            tolerance: Допустимая погрешность для сравнения с плавающей точкой
+            
+        Returns:
+            True, если треугольник прямоугольный
+        """
+        sides = sorted([self.a, self.b, self.c])
+        # Теорема Пифагора: c² = a² + b²
+        return abs(sides[2]**2 - (sides[0]**2 + sides[1]**2)) < tolerance
+
+
+class Rectangle(GeometricShape):
+    """Класс для работы с прямоугольником (пример расширения)."""
+    
+    def __init__(self, width: float, height: float):
+        """
+        Инициализация прямоугольника.
+        
+        Args:
+            width: Ширина прямоугольника
+            height: Высота прямоугольника
+            
+        Raises:
+            ValueError: Если ширина или высота отрицательные или равны нулю
+        """
+        if width <= 0 or height <= 0:
+            raise ValueError("Ширина и высота должны быть положительными числами")
+        self.width = width
+        self.height = height
+    
+    def area(self) -> float:
+        """Вычисляет площадь прямоугольника."""
+        return self.width * self.height
+    
+    def validate(self) -> bool:
+        """Проверяет корректность размеров прямоугольника."""
+        return self.width > 0 and self.height > 0
+
+
+def calculate_area(shape: GeometricShape) -> float:
+    """
+    Вычисляет площадь фигуры без знания её типа в compile-time.
+    
+    Args:
+        shape: Экземпляр любой геометрической фигуры
+        
+    Returns:
+        Площадь фигуры
+        
+    Raises:
+        ValueError: Если фигура имеет некорректные параметры
+    """
+    if not shape.validate():
+        raise ValueError("Фигура имеет некорректные параметры")
+    return shape.area()
+
+
+# Удобные функции для создания фигур
+def create_circle(radius: float) -> Circle:
+    """Создает круг с заданным радиусом."""
+    return Circle(radius)
+
+
+def create_triangle(a: float, b: float, c: float) -> Triangle:
+    """Создает треугольник с заданными сторонами."""
+    return Triangle(a, b, c)
+
+
+def create_rectangle(width: float, height: float) -> Rectangle:
+    """Создает прямоугольник с заданными размерами."""
+    return Rectangle(width, height)
+
+
+# Пример использования
+if __name__ == "__main__":
+    # Создание фигур
+    circle = create_circle(5.0)
+    triangle = create_triangle(3.0, 4.0, 5.0)
+    rectangle = create_rectangle(4.0, 6.0)
+    
+    # Список фигур разных типов
+    shapes = [circle, triangle, rectangle]
+    
+    # Вычисление площадей без знания типа фигуры
+    for i, shape in enumerate(shapes):
+        area = calculate_area(shape)
+        print(f"Площадь фигуры {i+1}: {area:.2f}")
+    
+    # Проверка треугольника на прямоугольность
+    print(f"Треугольник (3,4,5) прямоугольный: {triangle.is_right_triangle()}")
+    
+    # Создание непрямоугольного треугольника
+    triangle2 = create_triangle(2.0, 3.0, 4.0)
+    print(f"Треугольник (2,3,4) прямоугольный: {triangle2.is_right_triangle()}")
