@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Крестики-Нолики</title>
+    <style>
+        body { font-family: Arial; text-align: center; background: #ffe6f2; }
+        h1 { color: #ff66b3; }
+        .board { display: grid; grid-template-columns: repeat(3, 100px); gap: 5px; justify-content: center; margin: 20px auto; }
+        .cell { width: 100px; height: 100px; background: white; border: 2px solid #ffb3d9; font-size: 2em; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
+        .cell:hover { background: #fff0f5; }
+    </style>
+</head>
+<body>
+    <h1>🌸 Крестики-Нолики 🌸</h1>
+    <div class="board" id="board">
+        <!-- Клетки создаются через JavaScript -->
+    </div>
+    <div id="message"></div>
+    <button onclick="resetGame()">Новая игра</button>
+
+    <script>
+        // Базовый JavaScript для отрисовки поля и отправки ходов
+        const boardElement = document.getElementById('board');
+        for (let i = 0; i < 9; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.index = i;
+            cell.addEventListener('click', () => makeMove(i));
+            boardElement.appendChild(cell);
+        }
+
+        async function makeMove(pos) {
+            const resp = await fetch('/move', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({position: pos})
+            });
+            const data = await resp.json();
+            updateBoard(data.board);
+            if (data.game_over) {
+                alert(data.winner === 'player' ? 'Вы победили!' : 'Игра окончена!');
+            }
+        }
+
+        function updateBoard(board) {
+            document.querySelectorAll('.cell').forEach((cell, i) => {
+                cell.textContent = board[i];
+                cell.style.color = board[i] === 'X' ? '#ff66b3' : '#3399ff';
+            });
+        }
+
+        async function resetGame() {
+            await fetch('/reset', {method: 'POST'});
+            updateBoard([' ',' ',' ',' ',' ',' ',' ',' ',' ']);
+        }
+
+        // Инициализация
+        resetGame();
+    </script>
+</body>
+</html>
